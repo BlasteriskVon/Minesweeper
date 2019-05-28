@@ -1,0 +1,49 @@
+#startBtn, #nothingBtn {
+    width: 100%;
+    height: auto;
+}
+
+button:disabled {
+    color: black;
+    padding: 0;
+    margin: 0;
+}
+
+.checkedZone {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    line-height: 60px;
+    font-size: 3em;
+}
+
+.new-row {
+    padding: 0;
+    margin:  0;
+    border: 0;
+}
+
+.new-block {
+    padding: 0;
+    height:4em;
+}
+
+.new-button {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+}
+
+.info-column {
+    padding: 0;
+}
+
+#infoButton {
+    width: 100%;
+    height: 4em;
+}
+
+#moreMinesButton {
+    width: 100%;
+    height: auto;
+}
