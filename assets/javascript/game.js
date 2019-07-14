@@ -6,11 +6,23 @@ $(document).ready(function() {
     var numberOfBombs = 12;
     var gameOver;
     var bombsRemaining;
+    var timer;
+    var timerInterval;
+    var timerStart = false;
+    var highScore;
+    if(localStorage.getItem("highScore") != null){
+        highScore = parseInt(localStorage.getItem("highScore"));
+    } else {
+        highScore = 3600; //initial high score will be an hour
+    }
+
     function startGame() {
         alert("Welcome to Minesweeper! Click a block to open it! Right-click a block to flag it! Don't hit a mine!")
         $(".container").empty();
         bombArray = [];
         safeArray = [];
+        timer = 0;
+        timerStart = false;
         gameOver = false;
         bombArray.length = 0;
         bombsRemaining = numberOfBombs;
@@ -21,8 +33,14 @@ $(document).ready(function() {
         var infoButton = $("<button>",{id:"infoButton"});
         infoColumn.append(infoButton);
         var moreMinesButton = $("<button>",{id:"moreMinesButton"});
-        moreMinesButton.text("Click to adjust the number of mines."); 
+        moreMinesButton.text("Click to adjust the number of mines.");
         infoColumn.append(moreMinesButton);
+        var timerHeader = $("<p>", {id:"timerHeader"});
+        timerHeader.text("Time: " + secondsToMinutes(timer));
+        infoColumn.append(timerHeader);
+        var highScoreHeader = $("<p>", {id:"highScoreHeader"});
+        highScoreHeader.text("High Score: " + secondsToMinutes(highScore));
+        infoColumn.append(highScoreHeader);
         moreMinesButton.on("click", function() {
             var totalSize = (12 * 12);
             var newAmount = prompt("Enter the amount of mines you would like. (Please enter a number greater than 0 and less than " + totalSize + ".)");
@@ -30,6 +48,7 @@ $(document).ready(function() {
                 newAmount = prompt("Please enter a number greater than 0 and less than " + totalSize + ".");
             }
             numberOfBombs = parseInt(newAmount);
+            clearInterval(timerInterval);
             startGame();
         })
         var gameColumn = $("<div>", {"class":"col-md-11 game-column"});
@@ -76,6 +95,13 @@ $(document).ready(function() {
 
 
         $(".new-button").on("click", function(e) {
+                if(!timerStart){
+                    timerInterval = setInterval(function() {
+                        $("#timerHeader").text("Time: " + secondsToMinutes(timer));
+                        timer++;
+                    }, 1000);
+                    timerStart = true;
+                }
                 if(!gameOver){
                     var x = parseInt(getX(e.target.id));
                     var y = parseInt(getY(e.target.id));
@@ -91,6 +117,13 @@ $(document).ready(function() {
         )
 
         $(".new-button").on("contextmenu", function(e) {
+            if(!timerStart){
+                timerInterval = setInterval(function() {
+                    timer++;
+                    $("#timerHeader").text("Time: " + secondsToMinutes(timer));
+                }, 1000);
+                timerStart = true;
+            }
             if(!gameOver){
                 var x = parseInt(getX(e.target.id));
                 var y = parseInt(getY(e.target.id));
@@ -117,7 +150,13 @@ $(document).ready(function() {
         var bombNumber = $("<div>");
         bombNumber.addClass("checked" + x + "-" + y);
         bombNumber.addClass("checkedZone");
-        bombNumber.on("dblclick", function() { openSurrounding(x,y);});
+        bombNumber.on("dblclick", function() { 
+            if(gameOver) {
+                return;
+            } else {
+                openSurrounding(x,y);
+            }
+        });
         if(bombsAround(x,y) != 0){
             bombNumber.text(bombsAround(x,y));
             $("#" + x + "-" + y).append(bombNumber);
@@ -166,6 +205,7 @@ $(document).ready(function() {
     }
 
     function youLose(){
+        clearInterval(timerInterval);
         for(var i = 0;i < bombArray.length;i++){
             if($("#" + bombArray[i]).is(":disabled")){
                 continue;
@@ -185,8 +225,14 @@ $(document).ready(function() {
 
     function youWin(){
         gameOver = true;
+        clearInterval(timerInterval);
         $("#infoButton").text("Play Again!");
         $("#infoButton").on("click", startGame);
+        if(timer < highScore){
+            $("#highScoreHeader").text("New High Score!");
+            highScore = timer;
+            localStorage.setItem("highScore", highScore);
+        }
         setTimeout(function() {
             alert("You win! Click the \"Play Again!\" button to play again!");
         }, 35)
@@ -270,6 +316,25 @@ $(document).ready(function() {
         } else {
             $("#infoButton").text(bombsRemaining + " mines remaining");
         }
+    }
+
+    function secondsToMinutes(time){
+        var timeInMinutes = Math.floor(time/60); //should give the integer of minutes within the time, so time of 67 would be 1
+        var timeInSeconds = time - (timeInMinutes * 60); //should give the seconds after the minutes are extracted
+        var displayedMinutes;
+        var displayedSeconds;
+        if(timeInMinutes < 10){
+            displayedMinutes = "0" + timeInMinutes.toString();
+        } else {
+            displayedMinutes = timeInMinutes.toString();
+        }
+        if(timeInSeconds < 10){
+            displayedSeconds = "0" + timeInSeconds.toString();
+        } else {
+            displayedSeconds = timeInSeconds.toString();
+        }
+        var displayedTime = displayedMinutes + ":" + displayedSeconds;
+        return displayedTime;
     }
 
     $("#startBtn").on("click", function(){
